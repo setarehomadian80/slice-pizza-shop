@@ -30,7 +30,7 @@ export default function Header() {
   );
 
   return (
-    <header className="sticky top-0 z-50 w-full">
+    <header className="sticky top-0 z-60 w-full">
       {/* Announcement Bar */}
       <div
         className="

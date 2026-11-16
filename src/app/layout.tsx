@@ -1,8 +1,9 @@
-
 import type { Metadata } from "next";
 import { Rubik, Shrikhand } from "next/font/google";
 import "./globals.css";
+
 import CartHydration from "@/components/providers/CartHydration";
+import QueryProvider from "@/providers/QueryProvider";
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -29,8 +30,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${rubik.variable} ${shrikhand.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <CartHydration />
-        {children}
+        <QueryProvider>
+          <CartHydration />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );
