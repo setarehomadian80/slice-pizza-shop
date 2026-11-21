@@ -12,19 +12,19 @@ const teamMembers = [
     name: "Bea Kowalski",
     role: "Co-founder, everything else",
     description: "Runs the shops, writes the menu and bakes the cookies.",
-    image: "/image/Bea.png",
+    image: "/image/bea.png",
   },
   {
     name: "Jide Adeyemi",
     role: "Head pizzaiolo, Wooster Square",
     description: "Can stretch a 16-inch base in eleven seconds. We timed it.",
-    image: "/image/Jide.png",
+    image: "/image/jide.png",
   },
   {
     name: "Mai Rowe",
     role: "Shop lead, Westville",
     description: "Knows every regular’s order and most of their dogs’ names.",
-    image: "/image/Mai.png",
+    image: "/image/mai.png",
   },
 ];
 

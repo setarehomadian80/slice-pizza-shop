@@ -27,7 +27,7 @@ export const deals: Deal[] = [
     badge: "MOST ORDERED",
     images: [
       {
-        src: "/image/Pepperoni.png",
+        src: "/image/pepperoni.png",
         alt: "Pepperoni pizza",
       },
       {
@@ -50,7 +50,7 @@ export const deals: Deal[] = [
         alt: "Hot Honey Pepperoni pizza",
       },
       {
-        src: "/image/Pepperoni.png",
+        src: "/image/pepperoni.png",
         alt: "Pepperoni pizza",
       },
     ],

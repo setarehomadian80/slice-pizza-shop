@@ -35,7 +35,7 @@ export const pizzas: Pizza[] = [
     id: "Pepperoni",
     name: "Pepperoni Party",
     price: "10.50",
-    image: "/image/Pepperoni.png",
+    image: "/image/pepperoni.png",
     description:
       "A double layer of cup-and-char Pepperoni on tomato and fior di latte. Crispy edges, little pools of joy.",
     diet: null,

@@ -17,7 +17,7 @@ const deals: Deal[] = [
     theme: "yellow",
     images: [
       {
-        src: "/image/Pepperoni.png",
+        src: "/image/pepperoni.png",
         alt: "Solo Lunch pizza",
       },
     ],
@@ -52,7 +52,7 @@ const deals: Deal[] = [
     theme: "green",
     images: [
       {
-        src: "/image/Pepperoni.png",
+        src: "/image/pepperoni.png",
         alt: "First Family Feast pizza",
       },
       {
