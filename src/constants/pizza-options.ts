@@ -56,7 +56,7 @@ export const toppingGroups: ToppingGroup[] = [
     id: "meat-fish",
     title: "Meat & fish",
     options: [
-      { id: "pepperoni", name: "Pepperoni" },
+      { id: "Pepperoni", name: "Pepperoni" },
       { id: "nduja", name: "Nduja" },
       { id: "sausage", name: "Fennel sausage" },
       { id: "ham", name: "Cooked ham" },
