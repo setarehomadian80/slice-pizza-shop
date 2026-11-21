@@ -16,10 +16,12 @@ import {
 import { useCartStore } from "@/store/cart-store";
 import type { Pizza, PizzaSize } from "@/types/product";
 import type { CrustId } from "@/types/pizza-options";
+import type { PizzaCartItem } from "@/types/cart";
 
 type PizzaModalProps = {
   pizza: Pizza;
   onClose: () => void;
+  initialItem?: PizzaCartItem;
 };
 
 type PizzaPreviewProps = {
@@ -67,11 +69,7 @@ function PizzaPreview({ pizza, otherHalf }: PizzaPreviewProps) {
         fill
         sizes="(max-width: 767px) 220px, 320px"
         className="object-contain"
-        style={
-          otherHalf
-            ? { clipPath: "inset(0 50% 0 0)" }
-            : undefined
-        }
+        style={otherHalf ? { clipPath: "inset(0 50% 0 0)" } : undefined}
       />
 
       {otherHalf && (
@@ -91,6 +89,7 @@ function PizzaPreview({ pizza, otherHalf }: PizzaPreviewProps) {
 export default function PizzaModal({
   pizza,
   onClose,
+  initialItem,
 }: PizzaModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -103,23 +102,68 @@ export default function PizzaModal({
   const otherHalfId = useId();
   const toppingsHintId = useId();
 
-  const sizes = pizza.sizes ?? [];
-
-  const [size, setSize] = useState<PizzaSize>(
-    sizes.find((option) => option.size === "regular")?.size ??
-      sizes[0]?.size ??
-      "small"
+  const configuredPizza = pizzas.find(
+    (item) => item.id === pizza.id || item.name === pizza.name,
   );
 
-  const [crustId, setCrustId] = useState<CrustId>("classic");
-  const [halfEnabled, setHalfEnabled] = useState(false);
-  const [otherHalfIdValue, setOtherHalfIdValue] = useState("");
-  const [toppingIds, setToppingIds] = useState<string[]>([]);
-  const [quantity, setQuantity] = useState(1);
+ const priceInPence = Math.round(
+  Number(pizza.price.replace(/[^\d.]/g, "")) * 100
+);
+
+const sizes =
+  pizza.sizes?.length
+    ? pizza.sizes
+    : Number.isFinite(priceInPence) && priceInPence > 0
+      ? [
+          {
+            size: "regular" as const,
+            label: "Regular",
+            inches: 12,
+            priceInPence,
+          },
+        ]
+      : [];
+
+  const isEditing = Boolean(initialItem);
+
+  const savedSize = sizes.find(
+    (option) =>
+      initialItem?.selections.Size === `${option.label} ${option.inches}″`,
+  );
+
+  const savedCrust = crustOptions.find(
+    (option) => option.name === initialItem?.selections.Crust,
+  );
+
+  const [size, setSize] = useState<PizzaSize>(
+    savedSize?.size ??
+      sizes.find((option) => option.size === "regular")?.size ??
+      sizes[0]?.size ??
+      "small",
+  );
+
+  const [crustId, setCrustId] = useState<CrustId>(savedCrust?.id ?? "classic");
+
+  const [halfEnabled, setHalfEnabled] = useState(
+    Boolean(initialItem?.selections["Other half ID"]),
+  );
+
+  const [otherHalfIdValue, setOtherHalfIdValue] = useState(
+    initialItem?.selections["Other half ID"] ?? "",
+  );
+
+  const [toppingIds, setToppingIds] = useState<string[]>(() =>
+    allToppings
+      .filter((topping) => initialItem?.included.includes(topping.name))
+      .map((topping) => topping.id),
+  );
+
+  const [quantity, setQuantity] = useState(initialItem?.quantity ?? 1);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
   const addItem = useCartStore((state) => state.addItem);
+  const updateItem = useCartStore((state) => state.updateItem);
 
   const selectedSize = sizes.find((option) => option.size === size);
   const crust = crustOptions.find((option) => option.id === crustId);
@@ -128,38 +172,32 @@ export default function PizzaModal({
     (candidate) =>
       candidate.id !== pizza.id &&
       candidate.sizes?.some(
-        (option) =>
-          option.size === size && validPrice(option.priceInPence)
-      )
+        (option) => option.size === size && validPrice(option.priceInPence),
+      ),
   );
 
   const canHalf =
-    size !== "small" &&
-    crustId !== "gluten-free" &&
-    halfChoices.length > 0;
+    size !== "small" && crustId !== "gluten-free" && halfChoices.length > 0;
 
   const otherHalf =
     halfEnabled && canHalf
-      ? halfChoices.find(
-          (candidate) => candidate.id === otherHalfIdValue
-        ) ?? halfChoices[0]
+      ? (halfChoices.find((candidate) => candidate.id === otherHalfIdValue) ??
+        halfChoices[0])
       : undefined;
 
   const otherHalfSize = otherHalf?.sizes?.find(
-    (option) => option.size === size
+    (option) => option.size === size,
   );
 
-  // ترتیب ثابت: ترتیب کلیک روی افزودنی‌ها روی تشخیص
-  // محصولات یکسان در سبد تأثیری نمی‌گذارد.
   const selectedToppings = allToppings.filter((topping) =>
-    toppingIds.includes(topping.id)
+    toppingIds.includes(topping.id),
   );
 
   const extraPrice = toppingPriceBySize[size];
 
   const basePrice = Math.max(
     selectedSize?.priceInPence ?? 0,
-    otherHalfSize?.priceInPence ?? 0
+    otherHalfSize?.priceInPence ?? 0,
   );
 
   const unitPriceInPence =
@@ -201,10 +239,7 @@ export default function PizzaModal({
       dialog.close();
       document.body.style.overflow = previousOverflow;
 
-      if (
-        previousFocus instanceof HTMLElement &&
-        previousFocus.isConnected
-      ) {
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) {
         previousFocus.focus();
       }
     };
@@ -222,7 +257,7 @@ export default function PizzaModal({
     if (crust?.onlySize && crust.onlySize !== nextSize) {
       setCrustId("classic");
       setNotice(
-        "Gluten-free base is Small only. Crust changed to classic sourdough."
+        "Gluten-free base is Small only. Crust changed to classic sourdough.",
       );
     }
 
@@ -231,9 +266,8 @@ export default function PizzaModal({
         candidate.id !== pizza.id &&
         candidate.sizes?.some(
           (option) =>
-            option.size === nextSize &&
-            validPrice(option.priceInPence)
-        )
+            option.size === nextSize && validPrice(option.priceInPence),
+        ),
     );
 
     if (nextHalfChoices.length === 0) {
@@ -242,9 +276,7 @@ export default function PizzaModal({
   }
 
   function handleCrust(nextId: CrustId) {
-    const nextCrust = crustOptions.find(
-      (option) => option.id === nextId
-    );
+    const nextCrust = crustOptions.find((option) => option.id === nextId);
 
     if (!nextCrust) return;
 
@@ -263,7 +295,7 @@ export default function PizzaModal({
       setSize(nextCrust.onlySize);
       setHalfEnabled(false);
       setNotice(
-        "Gluten-free base comes in Small 10″ only. Half & half is unavailable on Small."
+        "Gluten-free base comes in Small 10″ only. Half & half is unavailable on Small.",
       );
     }
   }
@@ -281,12 +313,7 @@ export default function PizzaModal({
   }
 
   function handleAdd() {
-    if (
-      !canAdd ||
-      !selectedSize ||
-      !crust ||
-      addingRef.current
-    ) {
+    if (!canAdd || !selectedSize || !crust || addingRef.current) {
       return;
     }
 
@@ -300,26 +327,33 @@ export default function PizzaModal({
 
     if (otherHalf) {
       selections["Other half"] = otherHalf.name;
-
-      // شناسه برای تشخیص دقیق انتخاب، حتی با نام‌های مشابه
       selections["Other half ID"] = otherHalf.id;
     }
 
+    const item: PizzaCartItem = {
+      id: initialItem?.id ?? crypto.randomUUID(),
+      pizzaId: pizza.id,
+      title: otherHalf ? `${pizza.name} / ${otherHalf.name}` : pizza.name,
+      image: pizza.image,
+      quantity,
+      unitPriceInPence,
+      selections,
+      included: selectedToppings.map((topping) => topping.name),
+    };
+
     try {
-      addItem({
-        id: crypto.randomUUID(),
-        pizzaId: pizza.id,
-        title: otherHalf
-          ? `${pizza.name} / ${otherHalf.name}`
-          : pizza.name,
-        quantity,
-        unitPriceInPence,
-        selections,
-        included: selectedToppings.map((topping) => topping.name),
-      });
+      if (initialItem) {
+        updateItem(item);
+      } else {
+        addItem(item);
+      }
     } catch {
       addingRef.current = false;
-      setError("Could not add your pizza. Please try again.");
+      setError(
+        isEditing
+          ? "Could not update your pizza. Please try again."
+          : "Could not add your pizza. Please try again.",
+      );
       return;
     }
 
@@ -374,8 +408,7 @@ export default function PizzaModal({
           )}
 
           <p className="mt-4 text-center text-xs leading-5 text-[#735b4b]">
-            Dietary suitability depends on your selected crust
-            and toppings.
+            Dietary suitability depends on your selected crust and toppings.
           </p>
 
           <p className="mt-3 text-center text-xs leading-5 text-[#735b4b]">
@@ -415,9 +448,7 @@ export default function PizzaModal({
 
             {/* Size */}
             <fieldset className="mt-6">
-              <legend className="text-sm font-extrabold">
-                Size
-              </legend>
+              <legend className="text-sm font-extrabold">Size</legend>
 
               <div className="mt-3 grid grid-cols-3 gap-2">
                 {sizes.map((option) => (
@@ -431,9 +462,7 @@ export default function PizzaModal({
                       className="peer sr-only"
                     />
 
-                    <span
-                      className={`${optionClasses} px-2 py-3 text-center`}
-                    >
+                    <span className={`${optionClasses} px-2 py-3 text-center`}>
                       <span aria-hidden="true" className="block text-2xl">
                         🍕
                       </span>
@@ -450,10 +479,9 @@ export default function PizzaModal({
                         {money(
                           option.priceInPence +
                             (crust &&
-                            (!crust.onlySize ||
-                              crust.onlySize === option.size)
+                            (!crust.onlySize || crust.onlySize === option.size)
                               ? crust.priceInPence
-                              : 0)
+                              : 0),
                         )}
                       </span>
                     </span>
@@ -470,16 +498,14 @@ export default function PizzaModal({
 
             {/* Crust */}
             <fieldset className="mt-6">
-              <legend className="text-sm font-extrabold">
-                Crust
-              </legend>
+              <legend className="text-sm font-extrabold">Crust</legend>
 
               <div className="mt-3 grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
                 {crustOptions.map((option) => {
                   const unavailable =
                     option.onlySize !== undefined &&
                     !sizes.some(
-                      (pizzaSize) => pizzaSize.size === option.onlySize
+                      (pizzaSize) => pizzaSize.size === option.onlySize,
                     );
 
                   return (
@@ -562,10 +588,7 @@ export default function PizzaModal({
 
               {halfEnabled && canHalf && (
                 <div className="mt-4">
-                  <label
-                    htmlFor={otherHalfId}
-                    className="text-sm font-bold"
-                  >
+                  <label htmlFor={otherHalfId} className="text-sm font-bold">
                     Other half
                   </label>
 
@@ -579,15 +602,13 @@ export default function PizzaModal({
                   >
                     {halfChoices.map((candidate) => {
                       const option = candidate.sizes?.find(
-                        (entry) => entry.size === size
+                        (entry) => entry.size === size,
                       );
 
                       return (
                         <option key={candidate.id} value={candidate.id}>
                           {candidate.name}
-                          {option
-                            ? ` (${money(option.priceInPence)})`
-                            : ""}
+                          {option ? ` (${money(option.priceInPence)})` : ""}
                         </option>
                       );
                     })}
@@ -598,9 +619,7 @@ export default function PizzaModal({
 
             {/* Toppings */}
             <fieldset className="mt-6" aria-describedby={toppingsHintId}>
-              <legend className="text-sm font-extrabold">
-                Extra toppings
-              </legend>
+              <legend className="text-sm font-extrabold">Extra toppings</legend>
 
               <p
                 id={toppingsHintId}
@@ -628,8 +647,7 @@ export default function PizzaModal({
                     {group.options.map((topping) => {
                       const checked = toppingIds.includes(topping.id);
                       const disabled =
-                        !checked &&
-                        toppingIds.length >= MAX_TOPPINGS;
+                        !checked && toppingIds.length >= MAX_TOPPINGS;
 
                       return (
                         <label
@@ -652,9 +670,7 @@ export default function PizzaModal({
                             className={`h-4 w-4 shrink-0 accent-[#28613a] ${focusClasses}`}
                           />
 
-                          <span className="flex-1 text-sm">
-                            {topping.name}
-                          </span>
+                          <span className="flex-1 text-sm">{topping.name}</span>
 
                           <span className="shrink-0 text-xs font-bold">
                             +{money(extraPrice)}
@@ -668,8 +684,8 @@ export default function PizzaModal({
             </fieldset>
 
             <p className="mt-6 text-xs leading-5 text-[#735b4b] md:hidden">
-              Dietary suitability depends on your selections.
-              Ask us for allergen information before ordering.
+              Dietary suitability depends on your selections. Ask us for
+              allergen information before ordering.
               {crustId === "gluten-free" &&
                 " Gluten-free bases are made in a kitchen that handles flour."}
             </p>
@@ -714,7 +730,7 @@ export default function PizzaModal({
                   disabled={quantity >= MAX_PIZZA_QUANTITY}
                   onClick={() =>
                     setQuantity((current) =>
-                      Math.min(MAX_PIZZA_QUANTITY, current + 1)
+                      Math.min(MAX_PIZZA_QUANTITY, current + 1),
                     )
                   }
                   aria-label={`One more ${pizza.name}`}
@@ -730,10 +746,8 @@ export default function PizzaModal({
                 onClick={handleAdd}
                 className={`flex min-h-12 min-w-0 flex-1 flex-wrap items-center justify-between gap-x-2 gap-y-1 rounded-full border-b-[3px] border-[#971f10] bg-[#d42b15] px-4 py-3 text-xs font-extrabold text-[#fff6e3] hover:bg-[#b92312] disabled:cursor-not-allowed disabled:opacity-40 sm:text-sm ${focusClasses}`}
               >
-                <span>Add to order</span>
-                <span className="tabular-nums">
-                  {money(totalPriceInPence)}
-                </span>
+                <span>{isEditing ? "Save changes" : "Add to order"}</span>
+                <span className="tabular-nums">{money(totalPriceInPence)}</span>
               </button>
             </div>
           </footer>

@@ -5,9 +5,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import type { CartItem, CartStore } from "@/types/cart";
 
-// آیا محتویات دو بسته دقیقاً یکسان است؟
 function isSameItem(first: CartItem, second: CartItem): boolean {
-  // پیتزا با پیتزا و بسته با بسته مقایسه می‌شود.
   let sameProduct = false;
 
   if ("pizzaId" in first && "pizzaId" in second) {
@@ -32,9 +30,7 @@ function isSameItem(first: CartItem, second: CartItem): boolean {
 
   const sameIncluded =
     firstIncluded.length === secondIncluded.length &&
-    firstIncluded.every(
-      (value, index) => value === secondIncluded[index]
-    );
+    firstIncluded.every((value, index) => value === secondIncluded[index]);
 
   return (
     first.unitPriceInPence === second.unitPriceInPence &&
@@ -43,9 +39,16 @@ function isSameItem(first: CartItem, second: CartItem): boolean {
   );
 }
 
-// تعداد باید یک عدد صحیح و مثبت باشد.
 function isValidQuantity(quantity: number): boolean {
   return Number.isSafeInteger(quantity) && quantity > 0;
+}
+
+function isValidItem(item: CartItem): boolean {
+  return (
+    isValidQuantity(item.quantity) &&
+    Number.isSafeInteger(item.unitPriceInPence) &&
+    item.unitPriceInPence >= 0
+  );
 }
 
 export const useCartStore = create<CartStore>()(
@@ -53,23 +56,14 @@ export const useCartStore = create<CartStore>()(
     (set) => ({
       items: [],
 
-      // اضافه‌کردن بسته به سبد
       addItem: (item) => {
-        if (!isValidQuantity(item.quantity)) return;
-
-        if (
-          !Number.isSafeInteger(item.unitPriceInPence) ||
-          item.unitPriceInPence < 0
-        ) {
-          return;
-        }
+        if (!isValidItem(item)) return;
 
         set((state) => {
           const existingItem = state.items.find((current) =>
             isSameItem(current, item)
           );
 
-          // بستهٔ یکسان قبلاً وجود دارد: فقط تعداد بیشتر می‌شود.
           if (existingItem) {
             const nextQuantity =
               existingItem.quantity + item.quantity;
@@ -85,7 +79,6 @@ export const useCartStore = create<CartStore>()(
             };
           }
 
-          // بستهٔ جدید یا با انتخاب‌های متفاوت
           const newItem: CartItem = {
             ...item,
             id: crypto.randomUUID(),
@@ -99,18 +92,38 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      // حذف یک ردیف از سبد
+      updateItem: (item) => {
+        if (!isValidItem(item)) return;
+
+        set((state) => {
+          const exists = state.items.some(
+            (current) => current.id === item.id
+          );
+
+          if (!exists) return state;
+
+          return {
+            items: state.items.map((current) =>
+              current.id === item.id
+                ? {
+                    ...item,
+                    selections: { ...item.selections },
+                    included: [...item.included],
+                  }
+                : current
+            ),
+          };
+        });
+      },
+
       removeItem: (id) => {
         set((state) => ({
           items: state.items.filter((item) => item.id !== id),
         }));
       },
 
-      // تغییر تعداد؛ صفر یعنی حذف آن ردیف
       updateQuantity: (id, quantity) => {
-        if (!Number.isSafeInteger(quantity) || quantity < 0) {
-          return;
-        }
+        if (!Number.isSafeInteger(quantity) || quantity < 0) return;
 
         set((state) => ({
           items:
@@ -122,7 +135,6 @@ export const useCartStore = create<CartStore>()(
         }));
       },
 
-      // خالی‌کردن کل سبد
       clearCart: () => {
         set({ items: [] });
       },
@@ -130,16 +142,11 @@ export const useCartStore = create<CartStore>()(
     {
       name: "slice-cart",
       version: 1,
-
       storage: createJSONStorage(() => localStorage),
-
-      // فقط اطلاعات سبد ذخیره می‌شود، نه توابع.
       partialize: (state) => ({
         items: state.items,
       }),
-
-      // بازیابی را بعد از آماده‌شدن مرورگر انجام می‌دهیم.
       skipHydration: true,
     }
   )
-); 
+);

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
 
 import type { Deal, DealCartItem, DealTheme } from "@/types/deal";
@@ -16,6 +10,8 @@ type DealModalProps = {
   deal: Deal;
   onClose: () => void;
   onAdd: (item: DealCartItem) => void | Promise<void>;
+  initialItem?: DealCartItem;
+  onUpdate?: (item: DealCartItem) => void | Promise<void>;
 };
 
 const panelStyles: Record<DealTheme, string> = {
@@ -32,6 +28,8 @@ export default function DealModal({
   deal,
   onClose,
   onAdd,
+  initialItem,
+  onUpdate,
 }: DealModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const submittingRef = useRef(false);
@@ -40,24 +38,28 @@ export default function DealModal({
   const fieldPrefix = useId();
 
   const fields = dealFields[deal.id] ?? [];
+  const isEditing = Boolean(initialItem);
 
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(initialItem?.quantity ?? 1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const [selections, setSelections] = useState<Record<string, string>>(
-    () => {
-      const initial: Record<string, string> = {};
+  const [selections, setSelections] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {};
 
-      for (const field of fields) {
-        if (field.kind === "select") {
-          initial[field.id] = field.defaultValue;
-        }
+    for (const field of fields) {
+      if (field.kind === "select") {
+        const savedValue = initialItem?.selections[field.id];
+
+        initial[field.id] =
+          savedValue && field.options.includes(savedValue)
+            ? savedValue
+            : field.defaultValue;
       }
-
-      return initial;
     }
-  );
+
+    return initial;
+  });
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -96,7 +98,7 @@ export default function DealModal({
       fields.every(
         (field) =>
           field.kind === "included" ||
-          field.options.includes(selections[field.id] ?? "")
+          field.options.includes(selections[field.id] ?? ""),
       );
 
     if (!valid) {
@@ -104,28 +106,42 @@ export default function DealModal({
       return;
     }
 
+    if (isEditing && !onUpdate) {
+      setError("Could not update this deal. Please try again.");
+      return;
+    }
+
     submittingRef.current = true;
     setSubmitting(true);
     setError("");
 
-    try {
-      const item: DealCartItem = {
-        id: crypto.randomUUID(),
-        dealId: deal.id,
-        title: deal.title,
-        quantity,
-        unitPriceInPence: deal.priceInPence,
-        selections: { ...selections },
-        included: fields.flatMap((field) =>
-          field.kind === "included" ? [field.label] : []
-        ),
-      };
+    const item: DealCartItem = {
+      id: crypto.randomUUID(),
+      dealId: deal.id,
+      title: deal.title,
+      image: deal.images[0]?.src ?? "/image/margherita.svg",
+      quantity,
+      unitPriceInPence: deal.priceInPence,
+      selections: { ...selections },
+      included: fields.flatMap((field) =>
+        field.kind === "included" ? [field.label] : [],
+      ),
+    };
 
-      await onAdd(item);
+    try {
+      if (initialItem && onUpdate) {
+        await onUpdate(item);
+      } else {
+        await onAdd(item);
+      }
     } catch {
       submittingRef.current = false;
       setSubmitting(false);
-      setError("Could not add this deal. Please try again.");
+      setError(
+        isEditing
+          ? "Could not update this deal. Please try again."
+          : "Could not add this deal. Please try again.",
+      );
       return;
     }
 
@@ -213,17 +229,12 @@ export default function DealModal({
               id={descriptionId}
               className="mt-3 text-sm leading-6 text-[#705a4b]"
             >
-              {deal.description}. Deal pizzas come on our classic
-              sourdough; extras aren’t included.
+              {deal.description}. Deal pizzas come on our classic sourdough;
+              extras aren’t included.
             </p>
 
-            <fieldset
-              disabled={submitting}
-              className="mt-6 space-y-4"
-            >
-              <legend className="sr-only">
-                Choose your bundle items
-              </legend>
+            <fieldset disabled={submitting} className="mt-6 space-y-4">
+              <legend className="sr-only">Choose your bundle items</legend>
 
               {fields.map((field) => {
                 if (field.kind === "included") {
@@ -239,9 +250,7 @@ export default function DealModal({
                         ✓
                       </span>
 
-                      <span className="text-sm font-bold">
-                        {field.label}
-                      </span>
+                      <span className="text-sm font-bold">{field.label}</span>
 
                       <span className="ml-auto text-xs font-semibold text-[#705a4b]">
                         Included
@@ -303,7 +312,6 @@ export default function DealModal({
             </fieldset>
           </div>
 
-          {/* Footer stays visible on desktop */}
           <div className="shrink-0 border-t border-[#301508]/10 bg-[#fff6e3] px-5 py-4 sm:px-8">
             <p className="text-sm leading-6 text-[#705a4b]">
               Worth {formatPrice(originalTotal)} on its own.{" "}
@@ -357,7 +365,16 @@ export default function DealModal({
                 disabled={submitting || fields.length === 0}
                 className="flex min-h-[52px] min-w-[180px] flex-1 items-center justify-between gap-4 rounded-full border-b-4 border-[#991b0c] bg-[#d42b15] px-6 py-3 text-sm font-extrabold text-[#fff6e3] hover:bg-[#bb2512] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d42b15] disabled:cursor-wait disabled:opacity-60"
               >
-                <span>{submitting ? "Adding…" : "Add deal"}</span>
+                <span>
+                  {submitting
+                    ? isEditing
+                      ? "Saving…"
+                      : "Adding…"
+                    : isEditing
+                      ? "Save changes"
+                      : "Add deal"}
+                </span>
+
                 <span>{formatPrice(total)}</span>
               </button>
             </div>

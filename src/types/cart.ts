@@ -9,6 +9,7 @@ export type PizzaCartItem = {
   unitPriceInPence: number;
   selections: Record<string, string>;
   included: string[];
+  image?: string;
 };
 
 // سبد می‌تواند بستهٔ تخفیفی یا پیتزای تکی داشته باشد.
@@ -18,10 +19,8 @@ export type CartStore = {
   items: CartItem[];
 
   addItem: (item: CartItem) => void;
-
+  updateItem: (item: CartItem) => void;
   removeItem: (id: string) => void;
-
   updateQuantity: (id: string, quantity: number) => void;
-
   clearCart: () => void;
 };

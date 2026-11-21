@@ -18,12 +18,11 @@ export const footerLocations = [
 ];
 
 export const footerLinks = [
-  { label: "Menu", href: "#menu" },
-  { label: "Vegan", href: "#vegan" },
-  { label: "Deals", href: "#deals" },
-  { label: "Catering", href: "#catering" },
-  { label: "Delivery", href: "#delivery" },
-  { label: "Our story", href: "#story" },
+  { label: "Menu", href: "/menu" },
+  { label: "Deals", href: "/deals" },
+  { label: "Locations", href: "/locations" },
+  { label: "Catering", href: "/catering" },
+  { label: "Our story", href: "/about" },
 ];
 
 export const footerSocialLinks = [

@@ -39,4 +39,5 @@ export type DealCartItem = {
   unitPriceInPence: number;
   selections: Record<string, string>;
   included: string[];
+  image?: string;
 };

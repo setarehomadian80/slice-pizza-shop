@@ -25,7 +25,8 @@ export default function CateringFAQ() {
   return (
     <section
       aria-labelledby="catering-faq-title"
-      className="w-full bg-[#fff5e2] px-5 py-14 text-[#301508] sm:px-12 sm:py-16 lg:py-20"
+      className="w-full bg-[#fff5e2] px-5 py-14
+       text-[#301508] sm:px-12 sm:pb-16 lg:pb-20"
     >
       <div className="mx-auto w-full max-w-7xl">
         <h2
