@@ -77,7 +77,7 @@ export default function CheckoutOrderSummary({
         </button>
       </div>
 
-      <ul className="mt-4 divide-y divide-dashed divide-[#e7ddcc]">
+      <ul className="mt-4 max-h-[45dvh] overflow-y-auto overscroll-contain pr-2 divide-y divide-dashed divide-[#e7ddcc]">
         {items.map((item) => {
           const image = getItemImage(item, products);
           const details = getItemDetails(item);
