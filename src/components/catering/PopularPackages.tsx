@@ -20,7 +20,7 @@ const packages = [
     id: "birthday-party",
     people: "10–60 PEOPLE",
     title: "Birthday party",
-    image: "/image/hot-honey-pep.png",
+    image: "/image/Hot-Honey-pep.png",
     imageAlt: "Pepperoni pizza",
     imageBackground: "#ffdbce",
     features: [

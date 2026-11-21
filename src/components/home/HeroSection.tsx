@@ -288,13 +288,14 @@ export default function HeroSection({
         {/* Pizza image */}
         <div className="mx-auto w-full max-w-[600px]">
           <Image
-            src="/image/hero-pizza.svg"
+            src="/image/vegan-diavola.png"
             alt="Pizza with pepperoni, mushrooms and basil"
             width={600}
             height={600}
             loading="eager"
             unoptimized
-            className="h-auto w-full object-contain drop-shadow-[0_28px_25px_rgba(83,20,2,0.25)]"
+            className="h-auto w-full object-contain 
+            drop-shadow-[0_28px_25px_rgba(83,20,2,0.25)]"
           />
         </div>
       </div>

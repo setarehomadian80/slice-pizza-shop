@@ -35,7 +35,7 @@ export const pizzas: Pizza[] = [
     id: "pepperoni",
     name: "Pepperoni Party",
     price: "10.50",
-    image: "/image/pepperoni.png",
+    image: "/image/Pepperoni.png",
     description:
       "A double layer of cup-and-char pepperoni on tomato and fior di latte. Crispy edges, little pools of joy.",
     diet: null,
@@ -62,7 +62,7 @@ export const pizzas: Pizza[] = [
     ],
   },
   {
-    id: "hot-honey",
+    id: "Hot-Honey",
     name: "Hot Honey Pep",
     price: "11.50",
     image: "/image/Hot-Honey.png",
@@ -92,7 +92,7 @@ export const pizzas: Pizza[] = [
     ],
   },
   {
-    id: "green-machine",
+    id: "Green-Machine",
     name: "Green Machine",
     price: "10.00",
     image: "/image/Green-Machine.png",

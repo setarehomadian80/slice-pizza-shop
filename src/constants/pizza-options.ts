@@ -75,7 +75,7 @@ export const toppingGroups: ToppingGroup[] = [
       { id: "pineapple", name: "Pineapple" },
       { id: "tomatoes", name: "Cherry tomatoes" },
       { id: "rocket", name: "Rocket" },
-      { id: "hot-honey", name: "Scotch bonnet hot honey" },
+      { id: "Hot-Honey", name: "Scotch bonnet hot honey" },
       { id: "chilli", name: "Chilli flakes" },
     ],
   },
