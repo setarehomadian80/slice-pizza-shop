@@ -2,28 +2,54 @@
 
 import Image from "next/image";
 
+import { useProducts } from "@/hooks/useProducts";
+
 type MenuHeroProps = {
   orderSummary?: string;
   onChangeOrder?: () => void;
 };
 
-const heroPizzas = [
+const heroPizzaOptions = [
   {
-    src: "/image/margherita.svg",
+    names: ["Margherita"],
     className: "left-0 top-4 size-56 -rotate-12",
     sizes: "224px",
   },
   {
-    src: "/image/Green-Machine.png",
+    names: ["Green Machine", "Green-Machine"],
     className: "right-0 top-0 size-64 rotate-6",
     sizes: "256px",
   },
 ] as const;
 
+function normalizeName(name: string): string {
+  return name.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
 export default function MenuHero({
   orderSummary = "Delivery or pickup?",
   onChangeOrder,
 }: MenuHeroProps) {
+  const { data: products = [] } = useProducts();
+
+  const heroPizzas = heroPizzaOptions.flatMap((option) => {
+    const product = products.find((item) =>
+      option.names.some(
+        (name) => normalizeName(item.name) === normalizeName(name)
+      )
+    );
+
+    if (!product?.image) return [];
+
+    return [
+      {
+        src: product.image,
+        className: option.className,
+        sizes: option.sizes,
+      },
+    ];
+  });
+
   return (
     <section
       dir="ltr"
@@ -31,7 +57,6 @@ export default function MenuHero({
       className="relative isolate w-full overflow-hidden bg-[#ce2813] pb-20 pt-12 text-[#fff5e2] sm:pt-16"
     >
       <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-[1.4fr_1fr]">
-        {/* Content */}
         <div>
           <p className="text-[13px] font-extrabold uppercase tracking-[0.16em]">
             Order online
@@ -46,9 +71,9 @@ export default function MenuHero({
           </h1>
 
           <p className="mt-5 max-w-xl text-lg leading-relaxed">
-            Twelve pizzas on 48-hour sourdough, in 10″, 12″ and 16″.
-            Go half &amp; half, add extras, swap to a gluten-free base.
-            Every allergen is listed on the item.
+            Twelve pizzas on 48-hour sourdough, in 10″, 12″ and 16″. Go half
+            &amp; half, add extras, swap to a gluten-free base. Every allergen is
+            listed on the item.
           </p>
 
           <div className="mt-6 inline-flex max-w-full flex-wrap items-center gap-2 rounded-full bg-[#a92110] px-4 py-2 text-sm font-bold">
@@ -80,11 +105,7 @@ export default function MenuHero({
           </div>
         </div>
 
-        {/* Decorative artwork */}
-        <div
-          aria-hidden="true"
-          className="relative hidden lg:block"
-        >
+        <div aria-hidden="true" className="relative hidden lg:block">
           <div className="relative mx-auto h-72 w-full max-w-md">
             {heroPizzas.map((pizza) => (
               <div
@@ -96,6 +117,7 @@ export default function MenuHero({
                   alt=""
                   fill
                   sizes={pizza.sizes}
+                  unoptimized
                   className="select-none object-contain"
                   draggable={false}
                 />
@@ -128,7 +150,6 @@ export default function MenuHero({
         </div>
       </div>
 
-      {/* Scalloped edge */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 -bottom-px h-[22px]"
