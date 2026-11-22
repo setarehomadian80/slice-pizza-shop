@@ -9,7 +9,7 @@ type MenuHeroProps = {
 
 const heroPizzas = [
   {
-    src: "/image/pepperoni.png",
+    src: "/image/Pepperoni.png",
     className: "left-0 top-4 size-56 -rotate-12",
     sizes: "224px",
   },
