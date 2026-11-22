@@ -46,15 +46,6 @@ state management, data persistence, form handling and user experience.
 
 <br/><br/>
 
-### 🛒 Shopping Cart
-
-<img src="PASTE_SCREENSHOT_3_URL_HERE" width="100%" alt="Shopping Cart" />
-
-<br/><br/>
-
-### 📦 Checkout Experience
-
-<img src="PASTE_SCREENSHOT_4_URL_HERE" width="100%" alt="Checkout Page" />
 
 </div>
 
