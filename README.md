@@ -36,13 +36,13 @@ state management, data persistence, form handling and user experience.
 
 ### 🏠 Home Page
 
-<img src="PASTE_SCREENSHOT_1_URL_HERE" width="100%" alt="Slice Pizza Home Page" />
+<img src="public/image/menu.png" width="100%" alt="Slice Pizza Home Page" />
 
 <br/><br/>
 
-### 🍕 Menu & Products
+### 🍕 Menu 
 
-<img src="PASTE_SCREENSHOT_2_URL_HERE" width="100%" alt="Pizza Menu" />
+<img src="public/image/modal.png" width="100%" alt="Pizza Menu" />
 
 <br/><br/>
 
